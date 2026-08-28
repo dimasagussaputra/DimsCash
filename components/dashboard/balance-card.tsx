@@ -91,19 +91,14 @@ export function BalanceCard({
 
   const STORAGE_KEY = "dims-cash-balance-visible";
 
-  const [isBalanceVisible, setIsBalanceVisible] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored !== "false";
-    } catch {
-      return true;
-    }
-  });
+  const [isBalanceVisible, setIsBalanceVisible] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored !== null) setIsBalanceVisible(stored !== "false");
+    } catch {}
     setIsHydrated(true);
   }, []);
 

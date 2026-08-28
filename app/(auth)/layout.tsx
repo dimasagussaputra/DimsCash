@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LedgerPreview } from "@/components/auth/ledger-preview";
-import { SplashScreen } from "@/components/auth/splash-screen";
 
 export const metadata: Metadata = {
   title: "DimsCash",
@@ -16,7 +15,6 @@ export default function AuthLayout({
 }) {
   return (
     <div className="grid min-h-svh lg:grid-cols-[1.05fr_1fr]">
-      <SplashScreen />
       {/* Brand panel — desktop only. Deep teal ink with a live-shaped
        * sample of the product, instead of marketing bullets. */}
       <aside className="relative hidden overflow-hidden bg-teal-950 text-white lg:flex lg:flex-col lg:justify-between lg:p-12">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { SplashScreen } from "@/components/auth/splash-screen";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default async function RootLayout({
       data-theme={theme === "dark" || theme === "light" ? theme : undefined}
     >
       <body className="min-h-full flex flex-col">
+        <SplashScreen />
         {children}
         <Toaster position="top-right" richColors />
       </body>

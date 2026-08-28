@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -81,7 +81,17 @@ export function CashflowChart({ data, months }: CashflowChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} barGap={4}>
+          <LineChart data={data}>
+            <defs>
+              <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--color-income)" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="var(--color-income)" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradExpense" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--color-expense)" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="var(--color-expense)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
@@ -102,23 +112,27 @@ export function CashflowChart({ data, months }: CashflowChartProps) {
             />
             <Tooltip
               content={<ChartTooltip />}
-              cursor={{ fill: "var(--muted)", opacity: 0.5 }}
+              cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: "4 4" }}
             />
-            <Bar
+            <Line
+              type="monotone"
               dataKey="income"
               name="Pemasukan"
-              fill="var(--color-income)"
-              radius={[6, 6, 0, 0]}
-              maxBarSize={28}
+              stroke="var(--color-income)"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "var(--color-income)", strokeWidth: 0 }}
+              activeDot={{ r: 5, strokeWidth: 0 }}
             />
-            <Bar
+            <Line
+              type="monotone"
               dataKey="expense"
               name="Pengeluaran"
-              fill="var(--color-expense)"
-              radius={[6, 6, 0, 0]}
-              maxBarSize={28}
+              stroke="var(--color-expense)"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "var(--color-expense)", strokeWidth: 0 }}
+              activeDot={{ r: 5, strokeWidth: 0 }}
             />
-          </BarChart>
+          </LineChart>
         </ResponsiveContainer>
 
         <div className="mt-2 flex items-center justify-center gap-5">

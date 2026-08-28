@@ -2,26 +2,16 @@ import Link from "next/link";
 import { Plus, Tags } from "lucide-react";
 import { getProfile } from "@/lib/services/profile.service";
 import { Button } from "@/components/ui/button";
-
-function greetingForHour(hour: number): string {
-  if (hour >= 4 && hour < 11) return "Selamat pagi";
-  if (hour < 15) return "Selamat siang";
-  if (hour < 19) return "Selamat sore";
-  return "Selamat malam";
-}
+import { GreetingText } from "./greeting-text";
 
 export async function DashboardGreeting() {
   const profile = await getProfile();
-  const greeting = greetingForHour(new Date().getHours());
   const name = profile?.full_name?.trim();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {greeting}
-          {name ? <>, {name}</> : null}
-        </h1>
+        <GreetingText name={name} />
         <p className="text-sm text-muted-foreground">
           Ringkasan kondisi keuangan Anda hari ini
         </p>

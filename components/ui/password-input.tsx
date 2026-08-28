@@ -17,6 +17,7 @@ function PasswordInput({ className, ...props }: React.ComponentProps<"input">) {
         {...props}
       />
       <button
+        suppressHydrationWarning
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
