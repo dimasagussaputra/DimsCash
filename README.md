@@ -188,39 +188,6 @@ Buka [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🔧 Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Project URL dari Supabase Dashboard |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Anon public key untuk client-side access |
-| `SUPABASE_SERVICE_ROLE_KEY` | ❌ | Service role key untuk admin/server-only ops |
-
-**Contoh `.env.example`:**
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
-# Optional: Server-only operations
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
----
-
-## 🗄 Database Schema Overview
-
-### Tabel Utama
-```sql
--- profiles: Extends auth.users
-profiles (id, full_name, avatar_url, created_at, updated_at)
-
--- categories: User-defined + default categories
-categories (id, user_id, name, type, icon, is_default, created_at, updated_at)
-
--- transactions: Financial records
-transactions (id, user_id, category_id, type, amount, description, transaction_date, created_at, updated_at)
-```
 
 ### Security
 - **Row Level Security (RLS)** aktif di semua tabel
@@ -329,44 +296,6 @@ pnpm seed
 pnpm format
 ```
 
----
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. **Push ke GitHub/GitLab/Bitbucket**
-2. **Import di Vercel** → Connect repository
-3. **Configure Environment Variables** di Vercel Dashboard:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (optional)
-4. **Deploy** → Otomatis build & deploy
-
-### Supabase Production Setup
-1. **Database** → Buka SQL Editor → Jalankan `supabase/migrations/0000_combined.sql`
-2. **Authentication** → Configure providers (Email, OAuth: Google, GitHub, dll)
-3. **URL Configuration** → Set Site URL & Redirect URLs di Auth settings
-
-### Environment Variables Production
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=prod-anon-key
-SUPABASE_SERVICE_ROLE_KEY=prod-service-role-key  # Server-only
-```
-
----
-
-## 🤝 Contributing
-
-Kontribusi dipersilakan! Ikuti langkah berikut:
-
-1. **Fork** repository ini
-2. **Buat branch** fitur/fix: `git checkout -b feat/nama-fitur`
-3. **Commit** perubahan: `git commit -m "feat: deskripsi singkat"`
-4. **Push** ke fork: `git push origin feat/nama-fitur`
-5. **Buat Pull Request** ke branch `main`
-
 ### Code Style Guidelines
 - **TypeScript strict mode** — No `any`, proper typing
 - **ESLint + Prettier** — Run `pnpm lint` sebelum commit
@@ -374,67 +303,11 @@ Kontribusi dipersilakan! Ikuti langkah berikut:
 - **Naming** — PascalCase components, camelCase functions/variables, kebab-case files
 - **CSS** — Tailwind utility classes, CSS variables untuk theming (`globals.css`)
 
-### Commit Convention (Conventional Commits)
-```
-feat:     Fitur baru
-fix:      Bug fix
-refactor: Refactor kode (tanpa perubahan fungsional)
-style:    Formatting, missing semi colons, etc.
-docs:     Dokumentasi
-test:     Menambah test
-chore:    Maintenance, update deps, build config
-```
-
----
-
-## 📄 License
-
-Distributed under the **MIT License**. See `LICENSE` for more information.
-
-```
-MIT License
-
-Copyright (c) 2025 DimsCash
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) — The React Framework for Production
-- [Supabase](https://supabase.com/) — The Open Source Firebase Alternative
-- [shadcn/ui](https://ui.shadcn.com/) — Beautifully designed accessible components
-- [Tailwind CSS](https://tailwindcss.com/) — Utility-first CSS framework
-- [Lucide](https://lucide.dev/) — Beautiful & consistent icons
-- [Recharts](https://recharts.org/) — Composable charting library
-- [date-fns](https://date-fns.org/) — Modern JavaScript date utility library
-- [Vercel](https://vercel.com/) — Deployment platform
-
----
 
 ## 📞 Support & Contact
 
-- **Issues**: [GitHub Issues](https://github.com/your-username/DimsCash/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/DimsCash/discussions)
-- **Email**: your-email@example.com
+- **GitHub**: https://github.com/dimasagussaputra
+- **Email**: agusdimas186@gmail.com
 
 ---
 
