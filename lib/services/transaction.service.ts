@@ -1,0 +1,129 @@
+import { createClient } from "@/lib/supabase/server";
+import type { Transaction, TransactionFilters } from "@/types/transaction";
+
+export const TRANSACTIONS_PAGE_SIZE = 10;
+
+export interface PaginatedTransactions {
+  data: Transaction[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function getTransactions(
+  filters: TransactionFilters = {}
+): Promise<PaginatedTransactions> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("transactions")
+    .select("*, category:categories(id, name, icon, type)", {
+      count: "exact",
+    });
+
+  if (filters.search) {
+    query = query.ilike("description", `%${filters.search}%`);
+  }
+  if (filters.type) {
+    query = query.eq("type", filters.type);
+  }
+  if (filters.categoryId) {
+    query = query.eq("category_id", filters.categoryId);
+  }
+  if (filters.from) {
+    query = query.gte("transaction_date", filters.from);
+  }
+  if (filters.to) {
+    query = query.lte("transaction_date", filters.to);
+  }
+
+  const sort = filters.sort ?? "desc";
+  // Secondary key keeps pagination stable when dates are equal.
+  query = query.order("transaction_date", { ascending: sort === "asc" });
+  query = query.order("created_at", { ascending: sort === "asc" });
+
+  const limit = filters.limit ?? TRANSACTIONS_PAGE_SIZE;
+  const page = Math.max(1, filters.page ?? 1);
+  const from = (page - 1) * limit;
+  query = query.range(from, from + limit - 1);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+
+  const total = count ?? 0;
+
+  return {
+    data: data ?? [],
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
+}
+
+export async function getTransactionById(
+  id: string
+): Promise<Transaction | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*, category:categories(id, name, icon, type)")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function createTransaction(payload: {
+  type: "income" | "expense";
+  category_id: string;
+  amount: number;
+  description?: string;
+  transaction_date: string;
+}): Promise<Transaction> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("transactions")
+    .insert({ ...payload, user_id: user.id })
+    .select("*, category:categories(id, name, icon, type)")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTransaction(
+  id: string,
+  payload: {
+    type: "income" | "expense";
+    category_id: string;
+    amount: number;
+    description?: string;
+    transaction_date: string;
+  }
+): Promise<Transaction> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .update(payload)
+    .eq("id", id)
+    .select("*, category:categories(id, name, icon, type)")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTransaction(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+
+  if (error) throw error;
+}
