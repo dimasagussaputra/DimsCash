@@ -258,6 +258,12 @@
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
+
 /* ---------------------------------------------------------------------------
  * Motion — entrance & micro-interactions (respects prefers-reduced-motion)
  * ------------------------------------------------------------------------- */
