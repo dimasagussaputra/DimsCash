@@ -251,6 +251,10 @@
   }
   html {
     @apply font-sans scroll-smooth;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
 }
 
