@@ -251,16 +251,6 @@
   }
   html {
     @apply font-sans scroll-smooth;
-    color-scheme: light;
-  }
-  html.dark {
-    color-scheme: dark;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme]) {
-    color-scheme: dark;
   }
 }
 
