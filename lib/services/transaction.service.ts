@@ -22,7 +22,8 @@ export async function getTransactions(
     });
 
   if (filters.search) {
-    query = query.ilike("description", `%${filters.search}%`);
+    const sanitized = filters.search.replace(/[%_]/g, "\\$&");
+    query = query.ilike("description", `%${sanitized}%`);
   }
   if (filters.type) {
     query = query.eq("type", filters.type);
@@ -65,10 +66,17 @@ export async function getTransactionById(
   id: string
 ): Promise<Transaction | null> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
   const { data, error } = await supabase
     .from("transactions")
     .select("*, category:categories(id, name, icon, type)")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (error) throw error;
@@ -110,10 +118,17 @@ export async function updateTransaction(
   }
 ): Promise<Transaction> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
   const { data, error } = await supabase
     .from("transactions")
     .update(payload)
     .eq("id", id)
+    .eq("user_id", user.id)
     .select("*, category:categories(id, name, icon, type)")
     .single();
 
@@ -123,7 +138,17 @@ export async function updateTransaction(
 
 export async function deleteTransaction(id: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
 
   if (error) throw error;
 }

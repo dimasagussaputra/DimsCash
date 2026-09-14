@@ -13,7 +13,7 @@ const protectedRoutes = [
 
 const authRoutes = ["/login", "/register"];
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const path = request.nextUrl.pathname;

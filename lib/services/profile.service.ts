@@ -106,7 +106,7 @@ export async function changePassword(
   if (verifyError) throw new Error("Kata sandi lama tidak sesuai");
 
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Gagal memperbarui kata sandi. Silakan coba lagi.");
 }
 
 export async function uploadAvatar(file: File): Promise<Profile> {
@@ -136,7 +136,7 @@ export async function uploadAvatar(file: File): Promise<Profile> {
       upsert: false,
     });
 
-  if (uploadError) throw new Error(uploadError.message);
+  if (uploadError) throw new Error("Gagal mengunggah foto. Silakan coba lagi.");
 
   const { data } = supabase.storage
     .from(AVATAR_BUCKET)
