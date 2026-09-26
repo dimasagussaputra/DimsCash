@@ -33,6 +33,7 @@ export default async function RootLayout({
   return (
     <html
       lang="id"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${
         pinnedDark ? "dark" : ""
       }`}

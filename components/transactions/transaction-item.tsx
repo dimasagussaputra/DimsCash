@@ -41,29 +41,27 @@ export function TransactionItem({ transaction: t }: TransactionItemProps) {
   const isIncome = t.type === "income";
 
   return (
-    <div className="lift group flex items-center justify-between gap-3 rounded-xl border bg-card p-3 hover:border-primary/30">
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-            isIncome
-              ? "bg-income/10 text-income"
-              : "bg-expense/10 text-expense"
-          )}
-        >
-          <IconComponent className="size-4" />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">
-            {t.category?.name ?? "Tanpa Kategori"}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {t.description ?? "Tanpa deskripsi"} &bull;{" "}
-            {formatTransactionDate(t.transaction_date)}
-          </p>
-        </div>
+    <div className="lift group flex items-center gap-3 rounded-xl border bg-card p-3 hover:border-primary/30">
+      <span
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
+          isIncome
+            ? "bg-income/10 text-income"
+            : "bg-expense/10 text-expense"
+        )}
+      >
+        <IconComponent className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">
+          {t.category?.name ?? "Tanpa Kategori"}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">
+          {t.description ?? "Tanpa deskripsi"} &bull;{" "}
+          {formatTransactionDate(t.transaction_date)}
+        </p>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-2">
         <p
           className={cn(
             "font-mono text-sm font-semibold tabular-nums",

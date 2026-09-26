@@ -18,6 +18,7 @@ interface BalanceCardProps {
   periodExpense: number;
   prevPeriodIncome: number;
   prevPeriodExpense: number;
+  monthLabel?: string | null;
 }
 
 /**
@@ -86,6 +87,7 @@ export function BalanceCard({
   periodExpense,
   prevPeriodIncome,
   prevPeriodExpense,
+  monthLabel,
 }: BalanceCardProps) {
   const animatedBalance = useCountUp(balance);
 
@@ -148,7 +150,7 @@ export function BalanceCard({
               <TrendingUp className="size-4 text-income" />
             </span>
             <p className="text-sm font-medium text-muted-foreground">
-              Masuk bulan ini
+              {monthLabel ? `Masuk ${monthLabel}` : "Masuk bulan ini"}
             </p>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -168,7 +170,7 @@ export function BalanceCard({
               <TrendingDown className="size-4 text-expense" />
             </span>
             <p className="text-sm font-medium text-muted-foreground">
-              Keluar bulan ini
+              {monthLabel ? `Keluar ${monthLabel}` : "Keluar bulan ini"}
             </p>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -1,19 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
+import { toError, withRetry } from "@/lib/supabase/errors";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import type { DashboardSummary, CashflowPoint, CategoryExpense } from "@/types/dashboard";
 
-export async function getDashboardSummary(): Promise<DashboardSummary> {
+function monthDate(month: string): Date {
+  const [year, m] = month.split("-").map(Number);
+  if (!Number.isInteger(year) || !Number.isInteger(m) || m < 1 || m > 12) {
+    return new Date();
+  }
+  return new Date(year, m - 1, 1);
+}
+
+export async function getDashboardSummary(month: string): Promise<DashboardSummary> {
   const supabase = await createClient();
-  const now = new Date();
-  const currentKey = format(now, "yyyy-MM");
-  const prevKey = format(subMonths(now, 1), "yyyy-MM");
+  const endMonth = monthDate(month);
+  const currentKey = format(endMonth, "yyyy-MM");
+  const prevKey = format(subMonths(endMonth, 1), "yyyy-MM");
 
   // Single lightweight query — all metrics are aggregated from these rows.
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("type, amount, transaction_date");
+  const { data, error } = await withRetry(() =>
+    supabase.from("transactions").select("type, amount, transaction_date")
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
 
   let totalIncome = 0;
   let totalExpense = 0;
@@ -55,23 +64,25 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
  * Monthly income vs expense for the last `months` months (6 or 12).
  * One range query instead of one query per month.
  */
-export async function getCashflowData(months: 6 | 12): Promise<CashflowPoint[]> {
+export async function getCashflowData(months: 6 | 12, month: string): Promise<CashflowPoint[]> {
   const supabase = await createClient();
-  const now = new Date();
-  const start = format(startOfMonth(subMonths(now, months - 1)), "yyyy-MM-dd");
-  const end = format(endOfMonth(now), "yyyy-MM-dd");
+  const endMonth = monthDate(month);
+  const start = format(startOfMonth(subMonths(endMonth, months - 1)), "yyyy-MM-dd");
+  const end = format(endOfMonth(endMonth), "yyyy-MM-dd");
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("type, amount, transaction_date")
-    .gte("transaction_date", start)
-    .lte("transaction_date", end);
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("transactions")
+      .select("type, amount, transaction_date")
+      .gte("transaction_date", start)
+      .lte("transaction_date", end)
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
 
   const keys: string[] = [];
   for (let i = months - 1; i >= 0; i--) {
-    keys.push(format(subMonths(now, i), "yyyy-MM"));
+    keys.push(format(subMonths(endMonth, i), "yyyy-MM"));
   }
   const buckets = new Map(
     keys.map((k) => [k, { income: 0, expense: 0 }])
@@ -94,20 +105,22 @@ export async function getCashflowData(months: 6 | 12): Promise<CashflowPoint[]> 
   });
 }
 
-export async function getCategoryExpenses(): Promise<CategoryExpense[]> {
+export async function getCategoryExpenses(month: string): Promise<CategoryExpense[]> {
   const supabase = await createClient();
-  const now = new Date();
-  const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
-  const monthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+  const endMonth = monthDate(month);
+  const monthStart = format(startOfMonth(endMonth), "yyyy-MM-dd");
+  const monthEnd = format(endOfMonth(endMonth), "yyyy-MM-dd");
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("category_id, amount, category:categories(name, icon)")
-    .eq("type", "expense")
-    .gte("transaction_date", monthStart)
-    .lte("transaction_date", monthEnd);
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("transactions")
+      .select("category_id, amount, category:categories(name, icon)")
+      .eq("type", "expense")
+      .gte("transaction_date", monthStart)
+      .lte("transaction_date", monthEnd)
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
 
   const map = new Map<string, CategoryExpense>();
 
@@ -130,14 +143,17 @@ export async function getCategoryExpenses(): Promise<CategoryExpense[]> {
   return Array.from(map.values()).sort((a, b) => b.total - a.total);
 }
 
-export async function getRecentTransactions(limit = 5) {
+export async function getRecentTransactions(limit: number, month: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*, category:categories(id, name, icon, type)")
-    .order("transaction_date", { ascending: false })
-    .limit(limit);
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("transactions")
+      .select("*, category:categories(id, name, icon, type)")
+      .lte("transaction_date", format(endOfMonth(monthDate(month)), "yyyy-MM-dd"))
+      .order("transaction_date", { ascending: false })
+      .limit(limit)
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data ?? [];
 }

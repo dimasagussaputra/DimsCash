@@ -8,6 +8,11 @@ export default function DashboardLoading() {
         <Skeleton className="h-4 w-64" />
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Skeleton className="h-8 w-[176px] rounded-lg" />
+        <Skeleton className="h-8 w-28 rounded-lg" />
+      </div>
+
       {/* Balance hero + mini cards */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Skeleton className="min-h-36 rounded-2xl lg:col-span-3" />

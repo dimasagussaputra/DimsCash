@@ -1,15 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
+import { toError, withRetry } from "@/lib/supabase/errors";
 import type { Category } from "@/types/transaction";
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("is_default", { ascending: false })
-    .order("name");
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("categories")
+      .select("*")
+      .order("is_default", { ascending: false })
+      .order("name")
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data ?? [];
 }
 
@@ -17,14 +20,16 @@ export async function getCategoriesByType(
   type: "income" | "expense"
 ): Promise<Category[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("type", type)
-    .order("is_default", { ascending: false })
-    .order("name");
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("categories")
+      .select("*")
+      .eq("type", type)
+      .order("is_default", { ascending: false })
+      .order("name")
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data ?? [];
 }
 
@@ -40,13 +45,15 @@ export async function createCategory(
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
-    .from("categories")
-    .insert({ name, type, icon, user_id: user.id, is_default: false })
-    .select()
-    .single();
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("categories")
+      .insert({ name, type, icon, user_id: user.id, is_default: false })
+      .select()
+      .single()
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data;
 }
 
@@ -62,15 +69,17 @@ export async function updateCategory(
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
-    .from("categories")
-    .update({ name, icon })
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .select()
-    .single();
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("categories")
+      .update({ name, icon })
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select()
+      .single()
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data;
 }
 
@@ -82,11 +91,9 @@ export async function deleteCategory(id: string): Promise<void> {
 
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("categories")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
+  const { error } = await withRetry(() =>
+    supabase.from("categories").delete().eq("id", id).eq("user_id", user.id)
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
 }

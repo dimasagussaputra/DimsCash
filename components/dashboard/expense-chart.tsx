@@ -6,13 +6,15 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
+  type PieLabelRenderProps,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CategoryExpense } from "@/types/dashboard";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatCompactCurrency } from "@/lib/utils";
 
 interface ExpenseChartProps {
   data: CategoryExpense[];
+  title: string;
 }
 
 const CATEGORY_COLOR_MAP: Record<string, string> = {
@@ -41,8 +43,15 @@ const FALLBACK_COLORS = [
   "var(--color-chart-12)",
 ];
 
+const SLICE_LABEL_SIZE = 10;
+const MIN_SLICE_LABEL_SHARE = 0.05;
+const SLICE_LABEL_GAP = 8;
+
 const getCategoryColor = (name: string, index: number) =>
   CATEGORY_COLOR_MAP[name] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+
+const estimateTextWidth = (text: string) =>
+  text.length * SLICE_LABEL_SIZE * 0.58;
 
 function ChartTooltip({
   active,
@@ -65,19 +74,67 @@ function ChartTooltip({
   );
 }
 
-export function ExpenseChart({ data }: ExpenseChartProps) {
+export function ExpenseChart({ data, title }: ExpenseChartProps) {
   const total = data.reduce((sum, d) => sum + d.total, 0);
+
+  const renderSliceLabel = (props: PieLabelRenderProps) => {
+    const value = Number(props.value ?? 0);
+    const share = props.percent ?? (total > 0 ? value / total : 0);
+    if (share < MIN_SLICE_LABEL_SHARE) return null;
+
+    const radius = (props.innerRadius + props.outerRadius) / 2;
+    const angle = (-(props.startAngle + props.endAngle) / 2) * (Math.PI / 180);
+    const x = props.cx + Math.cos(angle) * radius;
+    const y = props.cy + Math.sin(angle) * radius;
+
+    const text = formatCompactCurrency(value);
+    const width = estimateTextWidth(text);
+    const available = share * Math.PI * 2 * radius - SLICE_LABEL_GAP;
+    if (width > available) return null;
+
+    const half = width / 2;
+    const near = Math.hypot(props.cx - (x - half), props.cy - y);
+    const far = Math.hypot(props.cx - (x + half), props.cy - y);
+    const innerLimit = props.innerRadius + 3;
+    const outerLimit = props.outerRadius - 3;
+    if (
+      near < innerLimit ||
+      far < innerLimit ||
+      near > outerLimit ||
+      far > outerLimit
+    ) {
+      return null;
+    }
+
+    return (
+      <text
+        x={x}
+        y={y}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={SLICE_LABEL_SIZE}
+        fontWeight={600}
+        fill="#fff"
+        stroke="rgba(0,0,0,0.35)"
+        strokeWidth={1.5}
+        paintOrder="stroke"
+      >
+        {text}
+      </text>
+    );
+  };
 
   if (data.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Pengeluaran Bulan Ini</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[300px] items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
-            Belum ada data pengeluaran
-          </div>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex h-[300px] items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+          Belum ada data pengeluaran
+        </div>
+
         </CardContent>
       </Card>
     );
@@ -86,7 +143,7 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Pengeluaran Bulan Ini</CardTitle>
+        <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative">
@@ -103,6 +160,8 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
                 dataKey="total"
                 nameKey="name"
                 strokeWidth={0}
+                label={renderSliceLabel}
+                labelLine={false}
               >
                 {data.map((entry, index) => (
                   <Cell key={index} fill={getCategoryColor(entry.name, index)} />
@@ -133,8 +192,13 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
                 />
                 <span className="truncate">{d.name}</span>
               </span>
-              <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
-                {Math.round((d.total / total) * 100)}%
+              <span className="flex shrink-0 items-center gap-2 font-mono tabular-nums">
+                <span className="font-medium">
+                  {formatCurrency(d.total)}
+                </span>
+                <span className="w-9 text-right text-muted-foreground">
+                  {Math.round((d.total / total) * 100)}%
+                </span>
               </span>
             </li>
           ))}

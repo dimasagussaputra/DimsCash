@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { toError, withRetry } from "@/lib/supabase/errors";
 import type { Transaction, TransactionFilters } from "@/types/transaction";
 
 export const TRANSACTIONS_PAGE_SIZE = 10;
@@ -48,8 +49,8 @@ export async function getTransactions(
   const from = (page - 1) * limit;
   query = query.range(from, from + limit - 1);
 
-  const { data, error, count } = await query;
-  if (error) throw error;
+  const { data, error, count } = await withRetry(() => query);
+  if (error) throw toError(error);
 
   const total = count ?? 0;
 
@@ -72,14 +73,16 @@ export async function getTransactionById(
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*, category:categories(id, name, icon, type)")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("transactions")
+      .select("*, category:categories(id, name, icon, type)")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single()
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data;
 }
 
@@ -97,13 +100,15 @@ export async function createTransaction(payload: {
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .insert({ ...payload, user_id: user.id })
-    .select("*, category:categories(id, name, icon, type)")
-    .single();
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("transactions")
+      .insert({ ...payload, user_id: user.id })
+      .select("*, category:categories(id, name, icon, type)")
+      .single()
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data;
 }
 
@@ -124,15 +129,17 @@ export async function updateTransaction(
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .update(payload)
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .select("*, category:categories(id, name, icon, type)")
-    .single();
+  const { data, error } = await withRetry(() =>
+    supabase
+      .from("transactions")
+      .update(payload)
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select("*, category:categories(id, name, icon, type)")
+      .single()
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   return data;
 }
 
@@ -144,11 +151,9 @@ export async function deleteTransaction(id: string): Promise<void> {
 
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("transactions")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
+  const { error } = await withRetry(() =>
+    supabase.from("transactions").delete().eq("id", id).eq("user_id", user.id)
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
 }

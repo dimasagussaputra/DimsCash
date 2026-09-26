@@ -16,6 +16,17 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function formatCompactCurrency(amount: number): string {
+  const abs = Math.abs(amount);
+  const withUnit = (n: number, suffix: string) =>
+    `${n.toLocaleString("id-ID", { maximumFractionDigits: 2 })}${suffix}`;
+
+  if (abs >= 1_000_000_000) return withUnit(amount / 1_000_000_000, "M");
+  if (abs >= 1_000_000) return withUnit(amount / 1_000_000, "jt");
+  if (abs >= 1_000) return `${Math.round(amount / 1_000)}rb`;
+  return amount.toLocaleString("id-ID", { maximumFractionDigits: 0 });
+}
+
 export function formatDate(dateString: string): string {
   const date = parseISO(dateString);
   return format(date, "dd MMM yyyy", { locale: id });
@@ -26,6 +37,10 @@ export function formatTransactionDate(dateString: string): string {
   if (isToday(date)) return "Hari ini";
   if (isYesterday(date)) return "Kemarin";
   return format(date, "dd MMM yyyy", { locale: id });
+}
+
+export function formatMonthLabel(date: Date, long = false): string {
+  return format(date, long ? "MMMM yyyy" : "MMM yyyy", { locale: id });
 }
 
 export function getInitials(name: string | null): string {

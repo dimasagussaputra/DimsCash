@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { toError, withRetry } from "@/lib/supabase/errors";
 import type { Profile } from "@/types/profile";
 
 const AVATAR_BUCKET = "avatars";
@@ -13,13 +14,11 @@ export async function getProfile(): Promise<Profile | null> {
 
   if (!user) return null;
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data, error } = await withRetry(() =>
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+  );
 
-  if (error) throw error;
+  if (error) throw toError(error);
   if (data) return data;
 
   // Profile row missing (e.g., user created before the trigger existed).
@@ -29,22 +28,22 @@ export async function getProfile(): Promise<Profile | null> {
     user.email?.split("@")[0] ||
     null;
 
-  const { error: seedError } = await supabase
-    .from("profiles")
-    .upsert(
-      { id: user.id, full_name: fallbackName },
-      { onConflict: "id", ignoreDuplicates: true }
-    );
+  const { error: seedError } = await withRetry(() =>
+    supabase
+      .from("profiles")
+      .upsert(
+        { id: user.id, full_name: fallbackName },
+        { onConflict: "id", ignoreDuplicates: true }
+      )
+  );
 
-  if (seedError) throw seedError;
+  if (seedError) throw toError(seedError);
 
-  const { data: seeded, error: reselectError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const { data: seeded, error: reselectError } = await withRetry(() =>
+    supabase.from("profiles").select("*").eq("id", user.id).single()
+  );
 
-  if (reselectError) throw reselectError;
+  if (reselectError) throw toError(reselectError);
   return seeded;
 }
 
@@ -56,24 +55,28 @@ export async function updateProfile(fullName: string): Promise<Profile> {
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data: updated, error: updateError } = await supabase
-    .from("profiles")
-    .update({ full_name: fullName })
-    .eq("id", user.id)
-    .select()
-    .maybeSingle();
+  const { data: updated, error: updateError } = await withRetry(() =>
+    supabase
+      .from("profiles")
+      .update({ full_name: fullName })
+      .eq("id", user.id)
+      .select()
+      .maybeSingle()
+  );
 
   let profile = updated;
 
   if (!profile) {
-    if (updateError) throw updateError;
-    const { data: inserted, error: insertError } = await supabase
-      .from("profiles")
-      .insert({ id: user.id, full_name: fullName })
-      .select()
-      .single();
+    if (updateError) throw toError(updateError);
+    const { data: inserted, error: insertError } = await withRetry(() =>
+      supabase
+        .from("profiles")
+        .insert({ id: user.id, full_name: fullName })
+        .select()
+        .single()
+    );
 
-    if (insertError) throw insertError;
+    if (insertError) throw toError(insertError);
     profile = inserted;
   }
 
@@ -82,7 +85,7 @@ export async function updateProfile(fullName: string): Promise<Profile> {
   const { error: metaError } = await supabase.auth.updateUser({
     data: { full_name: fullName },
   });
-  if (metaError) throw metaError;
+  if (metaError) throw toError(metaError);
 
   return profile;
 }
@@ -143,26 +146,30 @@ export async function uploadAvatar(file: File): Promise<Profile> {
     .getPublicUrl(objectPath);
 
   // Read the previous avatar before overwriting it.
-  const { data: current, error: selectError } = await supabase
-    .from("profiles")
-    .select("avatar_url")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data: current, error: selectError } = await withRetry(() =>
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+  );
 
-  if (selectError) throw selectError;
+  if (selectError) throw toError(selectError);
   const previousUrl: string | null = current?.avatar_url ?? null;
 
-  const { data: profile, error: updateError } = await supabase
-    .from("profiles")
-    .update({ avatar_url: data.publicUrl })
-    .eq("id", user.id)
-    .select()
-    .single();
+  const { data: profile, error: updateError } = await withRetry(() =>
+    supabase
+      .from("profiles")
+      .update({ avatar_url: data.publicUrl })
+      .eq("id", user.id)
+      .select()
+      .single()
+  );
 
   if (updateError) {
     // Rollback the orphan upload so storage stays clean.
     await supabase.storage.from(AVATAR_BUCKET).remove([objectPath]);
-    throw updateError;
+    throw toError(updateError);
   }
 
   // Best-effort cleanup of the replaced avatar object.

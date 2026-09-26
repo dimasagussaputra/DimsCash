@@ -75,11 +75,12 @@ export function TransactionsPagination({
         transaksi
       </p>
 
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-center gap-1">
         <PagerLink
           href={buildHref(params, 1)}
           disabled={page <= 1}
           label="Ke halaman pertama"
+          className="hidden sm:flex"
         >
           <ChevronsLeft className="size-4" />
         </PagerLink>
@@ -141,6 +142,7 @@ export function TransactionsPagination({
           href={buildHref(params, totalPages)}
           disabled={page >= totalPages}
           label="Ke halaman terakhir"
+          className="hidden sm:flex"
         >
           <ChevronsRight className="size-4" />
         </PagerLink>
@@ -153,11 +155,13 @@ function PagerLink({
   href,
   disabled,
   label,
+  className,
   children,
 }: {
   href: string;
   disabled: boolean;
   label: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -170,7 +174,8 @@ function PagerLink({
         "flex h-8 items-center gap-0.5 rounded-lg border px-2 text-sm font-medium transition-colors",
         disabled
           ? "pointer-events-none opacity-50"
-          : "hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          : "hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring",
+        className
       )}
     >
       {children}
